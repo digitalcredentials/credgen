@@ -15,20 +15,34 @@ export class Credential {
   addAchievementData(achievementData: any) {
     this.credentialJson.credentialSubject.hasAchieved = {...achievementData};
   }
-  
-  addLearnerData(certificateId: string, learnerDid: string, learnerName: string, image?: string, issuanceDate?: string) {
-    this.credentialJson.id = certificateId;
+
+  addLearnerData(learnerDid: string, learnerName: string) {
     this.credentialJson.credentialSubject.id = learnerDid;
     this.credentialJson.credentialSubject.name = learnerName;
+  }
+
+  addCredentialInstanceData(credentialId: string, image?: string, credentialName?: string, credentialDescription?: string, issuanceDate?: string) {
+    this.credentialJson.id = credentialId;
+
     if (image) {
-      this.credentialJson.displayProperties = image;
+      this.credentialJson.image = image!;
     }
-  
+    if (credentialName) {
+      this.credentialJson.name = credentialName!;
+    }
+    if (credentialDescription) {
+      this.credentialJson.description = credentialDescription!;
+    }
+
     if (issuanceDate) {
       this.credentialJson.issuanceDate = issuanceDate;
     } else {
       this.credentialJson.issuanceDate = new Date().toISOString();
     }
+  }
+
+  toJson() {
+    return this.credentialJson;
   }
 }
 

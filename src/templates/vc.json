@@ -6,10 +6,13 @@
 
   "id": "%url_to_valid_certificate_id%",
   "issuanceDate": "%iso_string_formatted_date%",
+  "name": "",
+  "description": "",
+  "image": "",
 
   "type": [
     "VerifiableCredential",
-    "CredentialSubjectAchievement"
+    "Assertion"
   ],
   "issuer": {
     "type": "Issuer"
@@ -19,7 +22,6 @@
     "id": "%learner_did%",
     "name": "%learner_full_name%",
     "hasAchieved": {
-      "type": "EducationalOccupationalCredential"
     }
   }
 }

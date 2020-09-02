@@ -11,7 +11,13 @@ credential.addIssuerData(issuer);
 // same per achievement type (i.e. certificate for completing a given program)
 credential.addAchievementData(achievement);
 
-// the parts that vary per learner award
-credential.addLearnerData( "https://example.org/path/to/credential", "did:example:learner", "Sample Learner");
+// the parts that vary per learner
+credential.addLearnerData("did:example:learner", "Sample Learner");
 
-console.log(JSON.stringify(credential, null, 4));
+// the parts that vary per learner/credential issuance
+credential.addCredentialInstanceData("https://example.org/path/to/credential", 
+  "image",
+  "Additive Manufacturing: Technology Principles and Applications", 
+  "This credential certifies that Sample Learner has successfully completed the Additive Manufacturing: Technology Principles and Applications program requirements");
+
+console.log(JSON.stringify(credential.toJson(), null, 4));
