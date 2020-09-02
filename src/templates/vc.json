@@ -1,0 +1,25 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://w3c-ccg.github.io/vc-ed/contexts/v1/context.json"
+  ],
+
+  "id": "%url_to_valid_certificate_id%",
+  "issuanceDate": "%iso_string_formatted_date%",
+
+  "type": [
+    "VerifiableCredential",
+    "CredentialSubjectAchievement"
+  ],
+  "issuer": {
+    "type": "Issuer"
+  },
+  "credentialSubject": {
+    "type": "Person",
+    "id": "%learner_did%",
+    "name": "%learner_full_name%",
+    "hasAchieved": {
+      "type": "EducationalOccupationalCredential"
+    }
+  }
+}
