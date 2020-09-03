@@ -6,9 +6,8 @@
 
   "id": "%url_to_valid_certificate_id%",
   "issuanceDate": "%iso_string_formatted_date%",
-  "name": "",
-  "description": "",
-  "image": "",
+  "name": "%name%",
+  "description": "%description%",
 
   "type": [
     "VerifiableCredential",

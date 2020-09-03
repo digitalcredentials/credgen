@@ -16,7 +16,6 @@ credential.addLearnerData("did:example:learner", "Sample Learner");
 
 // the parts that vary per learner/credential issuance
 credential.addCredentialInstanceData("https://example.org/path/to/credential", 
-  "image",
   "Additive Manufacturing: Technology Principles and Applications", 
   "This credential certifies that Sample Learner has successfully completed the Additive Manufacturing: Technology Principles and Applications program requirements");
 

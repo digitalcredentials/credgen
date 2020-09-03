@@ -1,3 +1,4 @@
+import {encode} from 'node-base64-image';
 const vc = require("./templates/vc.json");
 
 // for now, it just provides utilities around json, but we'll add type info
@@ -21,18 +22,25 @@ export class Credential {
     this.credentialJson.credentialSubject.name = learnerName;
   }
 
-  addCredentialInstanceData(credentialId: string, image?: string, credentialName?: string, credentialDescription?: string, issuanceDate?: string) {
+  addCredentialInstanceData(credentialId: string, credentialName?: string, credentialDescription?: string, image?: string, issuanceDate?: string) {
     this.credentialJson.id = credentialId;
 
-    if (image) {
-      this.credentialJson.image = image!;
-    }
     if (credentialName) {
       this.credentialJson.name = credentialName!;
     }
     if (credentialDescription) {
       this.credentialJson.description = credentialDescription!;
     }
+
+    /*
+    if (image) {
+      const options = {
+        string: true,
+      };
+       
+      const imageBuffer = await encode(image!, options);
+      this.credentialJson.image = imageBuffer;
+    }*/
 
     if (issuanceDate) {
       this.credentialJson.issuanceDate = issuanceDate;
