@@ -1,8 +1,13 @@
+#!/usr/bin/env node
+
+import dotenv from "dotenv";
+import os from "os";
 import program, { parseOptions } from "commander";
 import { Storage } from '@tweedegolf/storage-abstraction';
 import { newCredentialFromProfiles } from "./credential";
 import { ProfileManager, getProfileManagers } from "./profiles";
 
+dotenv.config();
 
 function configure(c: program.Command, mgr: ProfileManager) {
   const profileType = c.name();
@@ -39,7 +44,7 @@ function configure(c: program.Command, mgr: ProfileManager) {
 
 const c = program.version('0.0.1').description('credential and credential profile generator');
 
-const url = "local:///Users/kim/projects/credgen-ts/profiles/issuers?mode=750";
+const url = process.env.CG_STORAGE_URL || `local://${os.homedir()}/credgen/profiles/issuers?mode=750`;
 const s = new Storage(url);
 
 const profileManagers = getProfileManagers(s);
@@ -74,5 +79,3 @@ c.command('generate')
 });
 
 program.parse(process.argv);
-
-
