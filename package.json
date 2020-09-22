@@ -2,12 +2,13 @@
   "name": "credgen-ts",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/lib.js",
   "dependencies": {
     "@tweedegolf/storage-abstraction": "^1.4.3",
     "@types/node": "^14.6.3",
     "commander": "^6.1.0",
     "commandpost": "^1.4.0",
+    "dotenv": "^8.2.0",
     "fastify": "^3.3.0",
     "glob": "^7.1.6",
     "node-base64-image": "^2.0.1",
@@ -21,6 +22,7 @@
   "scripts": {
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
     "start": "node dist/index.js"
   },
   "repository": {
@@ -32,5 +34,8 @@
   "bugs": {
     "url": "https://github.com/digitalcredentials/credgen-ts/issues"
   },
-  "homepage": "https://github.com/digitalcredentials/credgen-ts#readme"
+  "homepage": "https://github.com/digitalcredentials/credgen-ts#readme",
+  "bin": {
+    "credgen": "./dist/index.js"
+  }
 }
