@@ -1,20 +1,13 @@
 import {encode} from 'node-base64-image';
-const vc = require("./templates/vc.json");
 
 // for now, it just provides utilities around json, but we'll add type info
 export class Credential {
   credentialJson: any;
 
-  constructor() {
-    this.credentialJson = JSON.parse(JSON.stringify(vc));
-  }
-
-  addIssuerData(issuerData: any) {
-    this.credentialJson.issuer = {...issuerData};
-  }
-
-  addAchievementData(achievementData: any) {
-    this.credentialJson.credentialSubject.hasAchieved = {...achievementData};
+  constructor(credentialTemplate: any, issuerProfile: any, achievementProfile: any) {
+    this.credentialJson = JSON.parse(JSON.stringify(credentialTemplate));
+    this.credentialJson.issuer = {...issuerProfile};
+    this.credentialJson.credentialSubject.hasAchieved = {...achievementProfile};
   }
 
   addLearnerData(learnerDid: string, learnerName: string) {
@@ -54,6 +47,7 @@ export class Credential {
   }
 }
 
-export function newCredential() {
-    return new Credential();
+
+export function newCredentialFromProfiles(credentialTemplate: any, issuerProfile: any, achievementProfile: any) {
+  return new Credential(credentialTemplate, issuerProfile, achievementProfile);
 }
