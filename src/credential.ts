@@ -10,12 +10,20 @@ export class Credential {
     this.credentialJson.credentialSubject.hasAchieved = {...achievementProfile};
   }
 
-  addLearnerData(learnerDid: string, learnerName: string) {
-    this.credentialJson.credentialSubject.id = learnerDid;
-    this.credentialJson.credentialSubject.name = learnerName;
+  addLearnerData(subjectDid: string, subjectData: any) {
+    this.credentialJson.credentialSubject = {...subjectData};
+    this.credentialJson.credentialSubject.id = subjectDid;
   }
 
-  addCredentialInstanceData(credentialId: string, credentialName?: string, credentialDescription?: string, image?: string, issuanceDate?: string) {
+  updateIssuanceDate(issuanceDate?: string) {
+    if (issuanceDate) {
+      this.credentialJson.issuanceDate = issuanceDate;
+    } else {
+      this.credentialJson.issuanceDate = new Date().toISOString();
+    }
+  }
+
+  addCredentialInstanceData(credentialId: string, credentialName?: string, credentialDescription?: string, image?: string) {
     this.credentialJson.id = credentialId;
 
     if (credentialName) {
@@ -35,11 +43,7 @@ export class Credential {
       this.credentialJson.image = imageBuffer;
     }*/
 
-    if (issuanceDate) {
-      this.credentialJson.issuanceDate = issuanceDate;
-    } else {
-      this.credentialJson.issuanceDate = new Date().toISOString();
-    }
+
   }
 
   toJson() {

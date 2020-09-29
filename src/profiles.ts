@@ -1,58 +1,67 @@
 import { Storage } from '@tweedegolf/storage-abstraction';
 
+import parse from "json-templates";
+import { openStdin } from 'process';
+
 const JsonFileExtension = '.json';
 export const IssuerString = 'issuer';
 export const AchievementString = 'achievement';
 export const CredentialTemplateString = 'credentialTemplate';
 
+// NOTE: these fields are not part of the VC standard, but are currently DCC convention
+// TODO: add support for meta-templates/schemas, and set command line options as a function
 const IssuerTemplate = {
-  type: IssuerString,
-  id: "",
-  image: "",
-  name: "",
-  url: ""
+  type: "Issuer",
+  id: "{{id}}",
+  image: "{{image}}",
+  name: "{{issuerName}}",
+  url: "{{url}}"
 };
 
+// NOTE: these fields are not part of the VC standard, but are currently DCC convention
+// TODO: add support for meta-templates/schemas, and set command line options as a function
 const AchievementTemplate = {
-  type: "",
-  id: "",
-  name: "",
-  description: ""
+  type: "{{type}}",
+  id: "{{id}}",
+  name: "{{achievementName}}",
+  description: "{{achievementDescription}}"
 };
 
 // TODO: make types and contexts configurable too
+// TODO: this is actually a meta-template
 const CredentialTemplate = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://w3c-ccg.github.io/vc-ed/contexts/v1/context.json"
   ],
-  id: "",
-  issuanceDate: "",
-  name: "",
-  description: "",
+  id: "{{id}}",
+  issuanceDate: "{{issuanceDate}}",
+  name: "{{vcName}}",
   type: [
     "VerifiableCredential",
     "Assertion"
   ],
-  issuer: {},
+  issuer: "{{issuer}}",
   credentialSubject: {
     type: "Person",
-    id: "",
-    name: "",
-    hasAchieved: {}
+    id: "{{subjectId}}",
+    name: "{{subjectName}}",
+    hasAchieved: "{{achievement}}"
   }
 }
 
-function getProfileTemplate(profileType: string): any {
+function getProfileTemplate(profileType: string): string {
+  let template = null;
   if (profileType === IssuerString) {
-    return IssuerTemplate;
+    template = IssuerTemplate;
   } else if (profileType === AchievementString) {
-    return AchievementTemplate;
+    template = AchievementTemplate;
   } else if (profileType === CredentialTemplateString) {
-    return CredentialTemplate;
+    template = CredentialTemplate;
   } else {
     throw new Error(`unrecognized profile type ${profileType}`);
   }
+  return JSON.stringify(template);
 }
 
 function getBucketName(profileType: string) {
@@ -78,23 +87,30 @@ function readableToString(readable): Promise<string> {
 export class ProfileManager {
   profileType: string;
   bucketName: string;
-  template: any;
+  parsedTemplate: any;
   s: Storage;
 
   constructor(profileType: string) {
     this.profileType = profileType;
     this.bucketName = getBucketName(profileType);
-    this.template = getProfileTemplate(profileType);
+    let templateAsString = getProfileTemplate(profileType);
+    this.parsedTemplate = parse(templateAsString);
   }
 
   setStorage(storage: Storage) {
     this.s = storage;
   }
 
-  async init(profileName: string): Promise<any> {
+  params(): any[] {
+    return this.parsedTemplate.parameters.map((o) => o['key']);
+  }
+
+  async init(profileName: string, opts: any): Promise<any> {
     const fileName = `${profileName}${JsonFileExtension}`;
     await this.s.selectBucket(this.bucketName);
-    return this.s.addFileFromBuffer(Buffer.from(JSON.stringify(this.template, null, 2), 'utf8'), `${fileName}`)
+    let parsed = this.parsedTemplate(opts);
+
+    return this.s.addFileFromBuffer(Buffer.from(parsed, 'utf8'), `${fileName}`)
       .then(() => {
         return {
           profileName: profileName,
