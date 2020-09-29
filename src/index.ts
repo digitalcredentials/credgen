@@ -5,7 +5,7 @@ import os from "os";
 import program, { parseOptions } from "commander";
 import { Storage } from '@tweedegolf/storage-abstraction';
 import { newCredentialFromProfiles } from "./credential";
-import { ProfileManager, getProfileManagers, newCredentialTemplate } from "./profiles";
+import { ProfileManager, getProfileManagers } from "./profiles";
 
 dotenv.config();
 
@@ -20,12 +20,10 @@ function configure(c: program.Command, mgr: ProfileManager) {
     initC.option(`--${p} <${p}>`, 'profile parameters; leave blank to initalize templatized', `{{${p}}}`);
   })
   initC.action((key, opts) => {
-      //mgr.init(key, opts)
-      let result = newCredentialTemplate(opts);
-      console.log(result);
-      //.then((result) => {
-     //   console.log(`${profileType} profile ${result.profileName} created as: ${result.fileName}`);
-      //});
+      mgr.init(key, opts)
+      .then((result) => {
+        console.log(`${profileType} profile ${result.profileName} created as: ${result.fileName}`);
+      });
     });
   c.command('ls')
     .action(() => {
