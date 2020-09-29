@@ -1,6 +1,6 @@
 import { Storage } from '@tweedegolf/storage-abstraction';
 
-import parse from "json-templates";
+import * as mustache from "mustache";
 import { openStdin } from 'process';
 
 const JsonFileExtension = '.json';
@@ -41,12 +41,12 @@ const CredentialTemplate = {
     "VerifiableCredential",
     "Assertion"
   ],
-  issuer: "{{issuer}}",
+  issuer: "{{>issuer}}",
   credentialSubject: {
     type: "Person",
     id: "{{subjectId}}",
     name: "{{subjectName}}",
-    hasAchieved: "{{achievement}}"
+    hasAchieved: "{{>achievement}}"
   }
 }
 
@@ -83,40 +83,85 @@ function readableToString(readable): Promise<string> {
   });
 }
 
+async function expandPartial(key: string, value: string): Promise<any> {
+  if (value.startsWith('{{>')) {
+    return null;
+  }
+  if (key === 'issuer') {
+    return issuerProfileManager.get(value);
+  } else if (key === 'achievement') {
+    return achievementProfileManager.get(value);
+  } else {
+    throw new Error(`unrecognized partial: ${key}`);
+  }
+}
+
+interface KVP {
+  key: string;
+  value: string;
+}
+
 
 export class ProfileManager {
   profileType: string;
   bucketName: string;
-  parsedTemplate: any;
+  templateAsString: string;
   s: Storage;
 
   constructor(profileType: string) {
     this.profileType = profileType;
     this.bucketName = getBucketName(profileType);
-    let templateAsString = getProfileTemplate(profileType);
-    this.parsedTemplate = parse(templateAsString);
+    this.templateAsString = getProfileTemplate(profileType);
   }
 
   setStorage(storage: Storage) {
     this.s = storage;
   }
 
-  params(): any[] {
-    return this.parsedTemplate.parameters.map((o) => o['key']);
+  params(): any[string] {
+    let parsedTemplate = mustache.parse(this.templateAsString);
+    return parsedTemplate
+      .filter((t) => {
+        return t[0] == 'name';
+      })
+      .map((o) => o[1]);
   }
 
-  async init(profileName: string, opts: any): Promise<any> {
-    const fileName = `${profileName}${JsonFileExtension}`;
-    await this.s.selectBucket(this.bucketName);
-    let parsed = this.parsedTemplate(opts);
+  partials(): any[string] {
+    let parsedTemplate = mustache.parse(this.templateAsString);
+    return parsedTemplate
+      .filter((t) => {
+        return t[0] == '>';
+      })
+      .map((o) => o[1]);
+  }
 
-    return this.s.addFileFromBuffer(Buffer.from(parsed, 'utf8'), `${fileName}`)
-      .then(() => {
-        return {
-          profileName: profileName,
-          fileName: fileName
-        };
-      });
+
+
+  async init(profileName: string, opts: any[]): Promise<any> {
+    const fileName = `${profileName}${JsonFileExtension}`;
+    let partials = this.partials();
+
+    let result2 = await Promise.all(partials.map(async function (p: string) {
+      let t = await expandPartial(p, opts['partial:' + p]);
+      return { key: p, value: t };
+    }));
+
+    let result3 = result2.reduce((map, val) => {
+      let foo = val as KVP;
+      map[foo.key] = JSON.stringify(foo.value);
+      return map;
+    }, {});
+
+      let rendered = mustache.render(this.templateAsString, opts, result3 as any);
+      await this.s.selectBucket(this.bucketName);
+      return this.s.addFileFromBuffer(Buffer.from(rendered, 'utf8'), `${fileName}`)
+        .then(() => {
+          return {
+            profileName: profileName,
+            fileName: fileName
+          };
+        });
   }
 
   async get(profileName: string): Promise<any> {
@@ -127,7 +172,7 @@ export class ProfileManager {
     });
   }
 
-  async list() : Promise<string[]> {
+  async list(): Promise<string[]> {
     const r = await this.s.selectBucket(this.bucketName);
     const f = await this.s.listFiles();
     return f.map(g => g[0].slice(0, -JsonFileExtension.length));

@@ -19,6 +19,9 @@ function configure(c: program.Command, mgr: ProfileManager) {
   mgr.params().forEach((p) => {
     initC.option(`--${p} <${p}>`, 'profile parameters; leave blank to initalize templatized', `{{${p}}}`);
   })
+  mgr.partials().forEach((p) => {
+    initC.requiredOption(`--partial:${p} <${p}>`, 'required profile parameters');
+  })
   initC.action((key, opts) => {
       mgr.init(key, opts)
       .then((result) => {
