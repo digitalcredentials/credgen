@@ -1,58 +1,67 @@
 import { Storage } from '@tweedegolf/storage-abstraction';
 
+import * as mustache from "mustache";
+import { openStdin } from 'process';
+
 const JsonFileExtension = '.json';
 export const IssuerString = 'issuer';
 export const AchievementString = 'achievement';
 export const CredentialTemplateString = 'credentialTemplate';
 
+// NOTE: these fields are not part of the VC standard, but are currently DCC convention
+// TODO: add support for meta-templates/schemas, and set command line options as a function
 const IssuerTemplate = {
-  type: IssuerString,
-  id: "",
-  image: "",
-  name: "",
-  url: ""
+  type: "Issuer",
+  id: "{{id}}",
+  image: "{{image}}",
+  name: "{{issuerName}}",
+  url: "{{url}}"
 };
 
+// NOTE: these fields are not part of the VC standard, but are currently DCC convention
+// TODO: add support for meta-templates/schemas, and set command line options as a function
 const AchievementTemplate = {
-  type: "",
-  id: "",
-  name: "",
-  description: ""
+  type: "{{type}}",
+  id: "{{id}}",
+  name: "{{achievementName}}",
+  description: "{{achievementDescription}}"
 };
 
 // TODO: make types and contexts configurable too
+// TODO: this is actually a meta-template
 const CredentialTemplate = {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
     "https://w3c-ccg.github.io/vc-ed/contexts/v1/context.json"
   ],
-  id: "",
-  issuanceDate: "",
-  name: "",
-  description: "",
+  id: "{{id}}",
+  issuanceDate: "{{issuanceDate}}",
+  name: "{{vcName}}",
   type: [
     "VerifiableCredential",
     "Assertion"
   ],
-  issuer: {},
+  issuer: "{{>issuer}}",
   credentialSubject: {
     type: "Person",
-    id: "",
-    name: "",
-    hasAchieved: {}
+    id: "{{subjectId}}",
+    name: "{{subjectName}}",
+    hasAchieved: "{{>achievement}}"
   }
 }
 
-function getProfileTemplate(profileType: string): any {
+function getProfileTemplate(profileType: string): string {
+  let template = null;
   if (profileType === IssuerString) {
-    return IssuerTemplate;
+    template = IssuerTemplate;
   } else if (profileType === AchievementString) {
-    return AchievementTemplate;
+    template = AchievementTemplate;
   } else if (profileType === CredentialTemplateString) {
-    return CredentialTemplate;
+    template = CredentialTemplate;
   } else {
     throw new Error(`unrecognized profile type ${profileType}`);
   }
+  return JSON.stringify(template);
 }
 
 function getBucketName(profileType: string) {
@@ -74,33 +83,85 @@ function readableToString(readable): Promise<string> {
   });
 }
 
+async function expandPartial(key: string, value: string): Promise<any> {
+  if (value.startsWith('{{>')) {
+    return null;
+  }
+  if (key === 'issuer') {
+    return issuerProfileManager.get(value);
+  } else if (key === 'achievement') {
+    return achievementProfileManager.get(value);
+  } else {
+    throw new Error(`unrecognized partial: ${key}`);
+  }
+}
+
+interface KVP {
+  key: string;
+  value: string;
+}
+
 
 export class ProfileManager {
   profileType: string;
   bucketName: string;
-  template: any;
+  templateAsString: string;
   s: Storage;
 
   constructor(profileType: string) {
     this.profileType = profileType;
     this.bucketName = getBucketName(profileType);
-    this.template = getProfileTemplate(profileType);
+    this.templateAsString = getProfileTemplate(profileType);
   }
 
   setStorage(storage: Storage) {
     this.s = storage;
   }
 
-  async init(profileName: string): Promise<any> {
+  params(): any[string] {
+    let parsedTemplate = mustache.parse(this.templateAsString);
+    return parsedTemplate
+      .filter((t) => {
+        return t[0] == 'name';
+      })
+      .map((o) => o[1]);
+  }
+
+  partials(): any[string] {
+    let parsedTemplate = mustache.parse(this.templateAsString);
+    return parsedTemplate
+      .filter((t) => {
+        return t[0] == '>';
+      })
+      .map((o) => o[1]);
+  }
+
+
+
+  async init(profileName: string, opts: any[]): Promise<any> {
     const fileName = `${profileName}${JsonFileExtension}`;
-    await this.s.selectBucket(this.bucketName);
-    return this.s.addFileFromBuffer(Buffer.from(JSON.stringify(this.template, null, 2), 'utf8'), `${fileName}`)
-      .then(() => {
-        return {
-          profileName: profileName,
-          fileName: fileName
-        };
-      });
+    let partials = this.partials();
+
+    let result2 = await Promise.all(partials.map(async function (p: string) {
+      let t = await expandPartial(p, opts['partial:' + p]);
+      return { key: p, value: t };
+    }));
+
+    let result3 = result2.reduce((map, val) => {
+      let foo = val as KVP;
+      map[foo.key] = JSON.stringify(foo.value);
+      return map;
+    }, {});
+
+      let rendered = mustache.render(this.templateAsString, opts, result3 as any);
+      await this.s.selectBucket(this.bucketName);
+      return this.s.addFileFromBuffer(Buffer.from(rendered, 'utf8'), `${fileName}`)
+        .then(() => {
+          return {
+            profileName: profileName,
+            fileName: fileName
+          };
+        });
   }
 
   async get(profileName: string): Promise<any> {
@@ -111,7 +172,7 @@ export class ProfileManager {
     });
   }
 
-  async list() : Promise<string[]> {
+  async list(): Promise<string[]> {
     const r = await this.s.selectBucket(this.bucketName);
     const f = await this.s.listFiles();
     return f.map(g => g[0].slice(0, -JsonFileExtension.length));

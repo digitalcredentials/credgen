@@ -3,10 +3,12 @@
     "https://www.w3.org/2018/credentials/v1",
     "https://w3c-ccg.github.io/vc-ed/contexts/v1/context.json"
   ],
-  "id": "",
   "issuanceDate": "",
+  
+  "id": "",
   "name": "",
   "description": "",
+
   "type": [
     "VerifiableCredential",
     "Assertion"

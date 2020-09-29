@@ -26,13 +26,13 @@ npm run start achievement describe metallurgy
 list achievements
 
 ```
-npm run start achievement list
+npm run start achievement ls
 ```
 
 add a 'chickenHusbandry' achievement
 
 ```
-npm run start achievement new chickenHusbandry
+npm run start achievement init chickenHusbandry
 ```
 
 remove 'chickenHusbandry' achievement
