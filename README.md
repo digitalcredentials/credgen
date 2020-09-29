@@ -20,25 +20,25 @@ The following examples are for the achievement profile type. Other profile types
 describe the 'metallurgy' achievement
 
 ```
-npm run start achievement describe metallurgy
+credgen achievement describe metallurgy
 ```
 
 list achievements
 
 ```
-npm run start achievement ls
+credgen achievement ls
 ```
 
 add a 'chickenHusbandry' achievement
 
 ```
-npm run start achievement init chickenHusbandry
+credgen achievement init chickenHusbandry
 ```
 
 remove 'chickenHusbandry' achievement
 
 ```
-npm run start achievement rm chickenHusbandry
+credgen achievement rm chickenHusbandry
 ```
 
 
@@ -49,5 +49,5 @@ Specify an issuer profile, achievement profile, and vc template with (TODO: curr
 ### Example usage
 
 ```
-npm run start -- generate --issuer xpro -a additiveManufacturing -c vc
+credgen generate --issuer xpro -a additiveManufacturing -c vc
 ```
