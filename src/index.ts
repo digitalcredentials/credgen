@@ -60,10 +60,36 @@ const s = new Storage(url);
 const templateManagers: TemplateManager[] = getTemplateManagers(s);
 templateManagers.forEach(t => configure(c.command(t.metaTemplateName), t));
 
+
+c.command(`generate-sample-templates`)
+.action(async () => {
+  let issuerOpts = {
+    issuerId: 'did:example:1234',
+    issuerImage: '',
+    issuerName: 'Demo Issuer',
+    issuerUrl: 'http://example.org'
+  };
+  let achievementOpts = {
+    achievementType: 'DemoAchievementType',
+    achievementId: 'http://example.org/achievements/demo',
+    achievementName: 'Demo Achievement',
+    achievementDescription: 'Everything about Demo Achievement...',
+  };
+  let credentialOpts = {
+    'partial:issuer': 'sampleIssuer',
+    'partial:achievement': 'sampleAchievement'
+  }
+
+  let [issuerManager, achievementManager, credentialManager] = templateManagers;
+  await issuerManager.init('sampleIssuer', issuerOpts);
+  await achievementManager.init('sampleAchievement', achievementOpts);
+  await credentialManager.init('sampleCredential', credentialOpts);
+})
+
 getCredentialTemplates()
   .then((templateInfo) => {
     templateInfo.forEach((ti: TemplateRenderer) => {
-      let ci = c.command(`generateFrom_${ti.name()}`)
+      let ci = c.command(`generate-from-${ti.name()}`)
       ti.partials().forEach((p: any) => {
         ci.requiredOption(`--${PartialPrefix}${p} <${p}>`, 'required template parameters');
       })

@@ -164,7 +164,7 @@ export class TemplateManager {
     return this.mgr.partials();
   }
 
-  async init(templateName: string, opts: any[]): Promise<any> {
+  async init(templateName: string, opts: any): Promise<any> {
     const fileName = `${templateName}${JsonFileExtension}`;
     let reformatted = await this.mgr.render(opts);
     await this.s.selectBucket(this.bucketName);
