@@ -7,6 +7,8 @@ There are two primary uses:
 ## Quick start
 
 ```
+npm install
+npm link
 credgen --help
 ```
 
