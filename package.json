@@ -9,6 +9,7 @@
     "@types/node": "^14.6.3",
     "commander": "^6.1.0",
     "commandpost": "^1.4.0",
+    "copyfiles": "^2.3.0",
     "dotenv": "^8.2.0",
     "fastify": "^3.3.0",
     "glob": "^7.1.6",
@@ -25,7 +26,9 @@
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm run build",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "postbuild": "npm run copy-files",
+    "copy-files": "copyfiles -u 1 src/**/*.mustache dist/"
   },
   "repository": {
     "type": "git",

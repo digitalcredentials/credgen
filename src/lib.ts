@@ -1,2 +1,2 @@
-export * from "./profiles";
+export * from "./templates";
 export * from "./credential";
