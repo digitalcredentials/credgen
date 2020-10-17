@@ -1,4 +1,4 @@
-# credgen-ts
+# credgen
 
 There are two primary uses:
 - Manage templates
